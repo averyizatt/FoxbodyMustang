@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // animations.cpp
-// Concrete animation implementations.
+// Concrete animation implementations for the BRAKE strip section.
 // ---------------------------------------------------------------------------
 
 #include "animations.h"
@@ -9,11 +9,9 @@
 
 // ── Static instance definitions ─────────────────────────────────────────────
 AnimOff        AnimationRegistry::_off;
-AnimRunning    AnimationRegistry::_running;
 AnimBrake      AnimationRegistry::_brake;
 AnimTurnSignal AnimationRegistry::_turnLeft;
 AnimTurnSignal AnimationRegistry::_turnRight;
-AnimReverse    AnimationRegistry::_reverse;
 AnimHazard     AnimationRegistry::_hazard;
 
 // ---------------------------------------------------------------------------
@@ -25,12 +23,12 @@ void AnimationRegistry::init() {
 Animation* AnimationRegistry::get(LightState state, bool isLeft) {
     switch (state) {
         case LightState::BRAKE:       return &_brake;
-        case LightState::LEFT_TURN:   return isLeft ? &_turnLeft : &_off;
-        case LightState::RIGHT_TURN:  return isLeft ? &_off      : &_turnRight;
-        case LightState::REVERSE:     return &_reverse;
-        case LightState::BRAKE_LEFT:  return isLeft ? &_turnLeft : &_brake;
-        case LightState::BRAKE_RIGHT: return isLeft ? &_brake    : &_turnRight;
+        case LightState::LEFT_TURN:   return isLeft ? &_turnLeft  : &_off;
+        case LightState::RIGHT_TURN:  return isLeft ? &_off       : &_turnRight;
+        case LightState::BRAKE_LEFT:  return isLeft ? &_turnLeft  : &_brake;
+        case LightState::BRAKE_RIGHT: return isLeft ? &_brake     : &_turnRight;
         case LightState::HAZARD:      return &_hazard;
+        case LightState::REVERSE:
         case LightState::OFF:
         default:                      return &_off;
     }
@@ -41,64 +39,46 @@ void AnimOff::update(TailLight& side, LightState /*state*/, unsigned long /*nowM
     side.fill(CRGB::Black);
 }
 
-// ── AnimRunning ──────────────────────────────────────────────────────────────
-void AnimRunning::update(TailLight& side, LightState /*state*/, unsigned long /*nowMs*/) {
-    // Dim red parking-light glow
-    side.fill(CRGB(BRIGHTNESS_DIM, 0, 0));
-}
-
 // ── AnimBrake ────────────────────────────────────────────────────────────────
 void AnimBrake::update(TailLight& side, LightState /*state*/, unsigned long /*nowMs*/) {
     side.fill(CRGB(255, 0, 0));
 }
 
 // ── AnimTurnSignal ───────────────────────────────────────────────────────────
-// Sequential column sweep across the 8×32 matrix.
-// Each cycle sweeps all 32 columns left-to-right (left side) or
-// right-to-left (right side), then blanks, then repeats.
+// Sequential amber sweep along the brake strip.
+// Left side: sweeps from index 0 → N-1 (outboard → inboard).
+// Right side: sweeps from index N-1 → 0 (outboard → inboard).
+// Each half-period sweeps; the other half is blank.
 
 void AnimTurnSignal::begin(TailLight& side, LightState /*state*/) {
     _startMs = millis();
-    _step    = 0;
 }
 
 void AnimTurnSignal::update(TailLight& side, LightState /*state*/, unsigned long nowMs) {
-    unsigned long elapsed = nowMs - _startMs;
+    unsigned long phase      = (nowMs - _startMs) % TURN_BLINK_PERIOD_MS;
     unsigned long halfPeriod = TURN_BLINK_PERIOD_MS / 2;
 
-    // Which half of the blink cycle are we in?
-    unsigned long phase = elapsed % TURN_BLINK_PERIOD_MS;
-
     if (phase >= halfPeriod) {
-        // Blank / off half
         side.fill(CRGB::Black);
-        _step = 0;
         return;
     }
 
-    // Sweep half: illuminate columns 0..step progressively
-    _step = static_cast<int>((phase * MATRIX_COLS) / halfPeriod);
-    _step = constrain(_step, 0, MATRIX_COLS - 1);
+    int numLEDs = side.numPixels();
+    int step    = static_cast<int>((phase * numLEDs) / halfPeriod);
+    step = constrain(step, 0, numLEDs - 1);
 
     side.fill(CRGB::Black);
 
-    bool sweepForward = side.isLeft();  // left panel sweeps inward (left→right)
-
-    for (int col = 0; col <= _step; col++) {
-        int c = sweepForward ? col : (MATRIX_COLS - 1 - col);
-        for (int row = 0; row < MATRIX_ROWS; row++) {
-            side.setPixel(row, c, CRGB(255, 100, 0));  // amber
-        }
+    // Left side sweeps forward (0 → step); right side sweeps backward
+    bool forward = side.isLeft();
+    for (int i = 0; i <= step; i++) {
+        int idx = forward ? i : (numLEDs - 1 - i);
+        side.setPixel(idx, CRGB(255, 100, 0));  // amber
     }
 }
 
 void AnimTurnSignal::end(TailLight& side) {
     side.fill(CRGB::Black);
-}
-
-// ── AnimReverse ──────────────────────────────────────────────────────────────
-void AnimReverse::update(TailLight& side, LightState /*state*/, unsigned long /*nowMs*/) {
-    side.fill(CRGB(255, 255, 255));
 }
 
 // ── AnimHazard ───────────────────────────────────────────────────────────────

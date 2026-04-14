@@ -5,45 +5,54 @@
 #include "taillight.h"
 
 void TailLight::begin() {
-    fill(CRGB::Black);
+    _fillSection(_runPixels,   LEDS_PER_SECTION_RUNNING, CRGB::Black);
+    _fillSection(_brakePixels, LEDS_PER_SECTION_BRAKE,   CRGB::Black);
+    _fillSection(_revPixels,   LEDS_PER_SECTION_REVERSE, CRGB::Black);
+
     _currentState = LightState::OFF;
-    _currentAnim  = AnimationRegistry::get(LightState::OFF, _isLeft);
-    if (_currentAnim) _currentAnim->begin(*this, _currentState);
+    _brakeAnim    = AnimationRegistry::get(LightState::OFF, _isLeft);
+    if (_brakeAnim) _brakeAnim->begin(*this, _currentState);
 }
 
 void TailLight::update(LightState state, unsigned long nowMs) {
-    // On state change, swap to the new animation
+    // ── Running section: dim red whenever the system is active ───────────────
+    _fillSection(_runPixels, LEDS_PER_SECTION_RUNNING,
+                 (state != LightState::OFF)
+                     ? CRGB(BRIGHTNESS_DIM, 0, 0)
+                     : CRGB::Black);
+
+    // ── Reverse section: white only during REVERSE ───────────────────────────
+    _fillSection(_revPixels, LEDS_PER_SECTION_REVERSE,
+                 (state == LightState::REVERSE)
+                     ? CRGB::White
+                     : CRGB::Black);
+
+    // ── Brake section: animation-driven (brake, turn, hazard) ────────────────
     if (state != _currentState) {
-        if (_currentAnim) _currentAnim->end(*this);
+        if (_brakeAnim) _brakeAnim->end(*this);
 
         _currentState = state;
-        _currentAnim  = AnimationRegistry::get(state, _isLeft);
+        _brakeAnim    = AnimationRegistry::get(state, _isLeft);
 
-        if (_currentAnim) _currentAnim->begin(*this, _currentState);
+        if (_brakeAnim) _brakeAnim->begin(*this, _currentState);
     }
 
-    if (_currentAnim) {
-        _currentAnim->update(*this, _currentState, nowMs);
+    if (_brakeAnim) {
+        _brakeAnim->update(*this, _currentState, nowMs);
     }
 }
 
 void TailLight::fill(CRGB colour) {
-    for (int i = 0; i < LEDS_PER_SIDE; i++) {
-        _pixels[i] = colour;
-    }
+    _fillSection(_brakePixels, LEDS_PER_SECTION_BRAKE, colour);
 }
 
-void TailLight::setPixel(int row, int col, CRGB colour) {
-    if (row < 0 || row >= MATRIX_ROWS) return;
-    if (col < 0 || col >= MATRIX_COLS) return;
-    _pixels[_index(row, col)] = colour;
+void TailLight::setPixel(int index, CRGB colour) {
+    if (index < 0 || index >= LEDS_PER_SECTION_BRAKE) return;
+    _brakePixels[index] = colour;
 }
 
-int TailLight::_index(int row, int col) const {
-    // Serpentine layout: even rows run left→right, odd rows run right→left
-    if (row % 2 == 0) {
-        return row * MATRIX_COLS + col;
-    } else {
-        return row * MATRIX_COLS + (MATRIX_COLS - 1 - col);
+void TailLight::_fillSection(CRGB* buf, int len, CRGB colour) {
+    for (int i = 0; i < len; i++) {
+        buf[i] = colour;
     }
 }
