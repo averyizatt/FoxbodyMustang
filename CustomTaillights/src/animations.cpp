@@ -6,6 +6,7 @@
 #include "animations.h"
 #include "taillight.h"
 #include "config.h"
+#include "settings.h"
 
 // ── Static instance definitions ─────────────────────────────────────────────
 AnimOff        AnimationRegistry::_off;
@@ -43,13 +44,13 @@ void AnimOff::update(TailLight& side, LightState /*state*/, unsigned long /*nowM
 
 // ── AnimRunning ──────────────────────────────────────────────────────────────
 void AnimRunning::update(TailLight& side, LightState /*state*/, unsigned long /*nowMs*/) {
-    // Dim red parking-light glow
-    side.fill(CRGB(BRIGHTNESS_DIM, 0, 0));
+    // Dim red parking-light glow — level comes from runtime settings
+    side.fill(CRGB(g_settings.brightness_dim, 0, 0));
 }
 
 // ── AnimBrake ────────────────────────────────────────────────────────────────
 void AnimBrake::update(TailLight& side, LightState /*state*/, unsigned long /*nowMs*/) {
-    side.fill(CRGB(255, 0, 0));
+    side.fill(CRGB(g_settings.brake_r, g_settings.brake_g, g_settings.brake_b));
 }
 
 // ── AnimTurnSignal ───────────────────────────────────────────────────────────
@@ -63,11 +64,11 @@ void AnimTurnSignal::begin(TailLight& side, LightState /*state*/) {
 }
 
 void AnimTurnSignal::update(TailLight& side, LightState /*state*/, unsigned long nowMs) {
-    unsigned long elapsed = nowMs - _startMs;
-    unsigned long halfPeriod = TURN_BLINK_PERIOD_MS / 2;
+    unsigned long elapsed    = nowMs - _startMs;
+    unsigned long halfPeriod = g_settings.turn_blink_ms / 2;
 
     // Which half of the blink cycle are we in?
-    unsigned long phase = elapsed % TURN_BLINK_PERIOD_MS;
+    unsigned long phase = elapsed % g_settings.turn_blink_ms;
 
     if (phase >= halfPeriod) {
         // Blank / off half
@@ -87,7 +88,7 @@ void AnimTurnSignal::update(TailLight& side, LightState /*state*/, unsigned long
     for (int col = 0; col <= _step; col++) {
         int c = sweepForward ? col : (MATRIX_COLS - 1 - col);
         for (int row = 0; row < MATRIX_ROWS; row++) {
-            side.setPixel(row, c, CRGB(255, 100, 0));  // amber
+            side.setPixel(row, c, CRGB(g_settings.turn_r, g_settings.turn_g, g_settings.turn_b));
         }
     }
 }
@@ -98,7 +99,7 @@ void AnimTurnSignal::end(TailLight& side) {
 
 // ── AnimReverse ──────────────────────────────────────────────────────────────
 void AnimReverse::update(TailLight& side, LightState /*state*/, unsigned long /*nowMs*/) {
-    side.fill(CRGB(255, 255, 255));
+    side.fill(CRGB(g_settings.reverse_r, g_settings.reverse_g, g_settings.reverse_b));
 }
 
 // ── AnimHazard ───────────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ void AnimHazard::begin(TailLight& side, LightState /*state*/) {
 }
 
 void AnimHazard::update(TailLight& side, LightState /*state*/, unsigned long nowMs) {
-    unsigned long phase = (nowMs - _startMs) % TURN_BLINK_PERIOD_MS;
-    bool on = phase < (TURN_BLINK_PERIOD_MS / 2);
-    side.fill(on ? CRGB(255, 100, 0) : CRGB::Black);
+    unsigned long phase = (nowMs - _startMs) % g_settings.turn_blink_ms;
+    bool on = phase < (g_settings.turn_blink_ms / 2);
+    side.fill(on ? CRGB(g_settings.turn_r, g_settings.turn_g, g_settings.turn_b) : CRGB::Black);
 }
