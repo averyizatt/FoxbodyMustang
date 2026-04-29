@@ -34,7 +34,13 @@ void settings_load() {
     g_settings.reverse_g      = _prefs.getUChar ("reverse_g",       255);
     g_settings.reverse_b      = _prefs.getUChar ("reverse_b",       255);
 
-    g_settings.wifi_mode      = _prefs.getUChar ("wifi_mode",         0);
+    g_settings.brake_anim     = _prefs.getUChar ("brake_anim",         0);
+    g_settings.turn_anim      = _prefs.getUChar ("turn_anim",          0);
+    g_settings.reverse_anim   = _prefs.getUChar ("reverse_anim",       0);
+    g_settings.run_anim       = _prefs.getUChar ("run_anim",           0);
+    g_settings.lens_preset    = _prefs.getUChar ("lens_preset",        0);
+
+    g_settings.wifi_mode      = _prefs.getUChar ("wifi_mode",          0);
 
     _prefs.getString("ap_ssid",  g_settings.ap_ssid,  sizeof(g_settings.ap_ssid));
     _prefs.getString("ap_pass",  g_settings.ap_pass,  sizeof(g_settings.ap_pass));
@@ -75,6 +81,12 @@ void settings_save() {
     _prefs.putUChar ("reverse_r",       g_settings.reverse_r);
     _prefs.putUChar ("reverse_g",       g_settings.reverse_g);
     _prefs.putUChar ("reverse_b",       g_settings.reverse_b);
+
+    _prefs.putUChar ("brake_anim",      g_settings.brake_anim);
+    _prefs.putUChar ("turn_anim",       g_settings.turn_anim);
+    _prefs.putUChar ("reverse_anim",    g_settings.reverse_anim);
+    _prefs.putUChar ("run_anim",        g_settings.run_anim);
+    _prefs.putUChar ("lens_preset",     g_settings.lens_preset);
 
     _prefs.putUChar ("wifi_mode",       g_settings.wifi_mode);
 
