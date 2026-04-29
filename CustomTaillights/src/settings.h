@@ -28,6 +28,21 @@ struct TaillightSettings {
     // ── Reverse color (default: white) ──────────────────────────────────────
     uint8_t  reverse_r = 255, reverse_g = 255, reverse_b = 255;
 
+    // ── Animation styles ─────────────────────────────────────────────────────
+    // brake_anim:   0=solid  1=pulse  2=center-out  3=strobe
+    // turn_anim:    0=sequential  1=flash  2=group-chase  3=bounce
+    // reverse_anim: 0=solid  1=pulse
+    // run_anim:     0=dim-solid  1=breathe
+    uint8_t  brake_anim   = 0;
+    uint8_t  turn_anim    = 0;
+    uint8_t  reverse_anim = 0;
+    uint8_t  run_anim     = 0;
+
+    // ── Lens preset ───────────────────────────────────────────────────────────
+    // Simulates different Foxbody taillight housing styles by masking LED zones.
+    // 0=Full panel  1=GT Cheese Grater (3-section)  2=LX/Base (2-section)  3=Cobra Bar
+    uint8_t  lens_preset  = 0;
+
     // ── WiFi ────────────────────────────────────────────────────────────────
     uint8_t  wifi_mode = 0;                      // 0 = AP,  1 = Station
     char     ap_ssid[33]  = "Foxbody-Taillights";

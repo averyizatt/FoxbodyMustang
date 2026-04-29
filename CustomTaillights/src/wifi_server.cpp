@@ -211,6 +211,79 @@ select{background:var(--surface2);color:var(--text);border:1px solid var(--borde
         <input type="text"  class="hex-in"     id="reverse_hex"   value="#ffffff" maxlength="7" spellcheck="false">
       </div>
     </div>
+    <div style="height:1px;background:var(--border);margin:10px 0 6px"></div>
+    <div class="section-label" style="padding:0;margin-bottom:10px">Quick Presets</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="prev-btn" style="flex:none;padding:9px 14px;font-size:13px" onclick="applyColorPreset('stock')"><span class="prev-dot" style="background:#ff0000"></span>Stock</button>
+      <button class="prev-btn" style="flex:none;padding:9px 14px;font-size:13px" onclick="applyColorPreset('cool')"><span class="prev-dot" style="background:#0055ff"></span>Cool</button>
+      <button class="prev-btn" style="flex:none;padding:9px 14px;font-size:13px" onclick="applyColorPreset('purple')"><span class="prev-dot" style="background:#aa00ff"></span>Purple</button>
+      <button class="prev-btn" style="flex:none;padding:9px 14px;font-size:13px" onclick="applyColorPreset('sport')"><span class="prev-dot" style="background:#ffd700"></span>Sport</button>
+      <button class="prev-btn" style="flex:none;padding:9px 14px;font-size:13px" onclick="applyColorPreset('murdered')"><span class="prev-dot" style="background:#550000"></span>Murdered</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Lens Preset ─────────────────────────────────────────────────────── -->
+<p class="section-label">Hardware</p>
+<div class="card">
+  <div class="card-hd">
+    <div class="card-icon ci-purple">&#128663;</div>
+    <div><div class="card-title">Lens Preset</div><div class="card-sub">LED zone layout matching your taillight housing</div></div>
+  </div>
+  <div class="card-body">
+    <div class="field" style="border:none;padding-bottom:0">
+      <label>Taillight Style</label>
+      <select id="lens_preset" onchange="updateLensDesc()">
+        <option value="0">Full Panel &mdash; all 256 LEDs active (custom / generic)</option>
+        <option value="1">GT Cheese Grater &mdash; 3-section chrome trim (87&ndash;93 Mustang GT)</option>
+        <option value="2">LX / Base &mdash; 2-section clean lens (87&ndash;93 Mustang LX)</option>
+        <option value="3">Cobra Bar &mdash; horizontal center-bar style (custom / Cobra)</option>
+      </select>
+      <small id="lens_desc" style="color:var(--text3);font-size:12px;margin-top:8px;display:block;line-height:1.5"></small>
+    </div>
+  </div>
+</div>
+
+<!-- ── Animation Styles ───────────────────────────────────────────────── -->
+<p class="section-label">Animations</p>
+<div class="card">
+  <div class="card-hd">
+    <div class="card-icon ci-amber">&#10024;</div>
+    <div><div class="card-title">Animation Styles</div><div class="card-sub">How each light state is displayed on the LEDs</div></div>
+  </div>
+  <div class="card-body">
+    <div class="field">
+      <label>Brake Animation</label>
+      <select id="brake_anim">
+        <option value="0">Solid Fill &mdash; instant-on, stays lit</option>
+        <option value="1">Pulse / Breathe &mdash; gently fades in and out</option>
+        <option value="2">Center-Out Fill &mdash; expands from center then holds</option>
+        <option value="3">Strobe Flash &mdash; rapid 8 Hz attention strobe</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Turn Signal Animation</label>
+      <select id="turn_anim">
+        <option value="0">Sequential Sweep &mdash; classic column-by-column sweep</option>
+        <option value="1">Simple Flash &mdash; whole panel blinks on / off</option>
+        <option value="2">Group Chase &mdash; 4-column groups sweep in sequence</option>
+        <option value="3">Bounce Sweep &mdash; Knight Rider beam bounces across</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Reverse Animation</label>
+      <select id="reverse_anim">
+        <option value="0">Solid White &mdash; instant-on, stays lit</option>
+        <option value="1">Pulse / Breathe &mdash; gently fades in and out</option>
+      </select>
+    </div>
+    <div class="field" style="border:none;padding-bottom:0">
+      <label>Running Light Animation</label>
+      <select id="run_anim">
+        <option value="0">Dim Solid &mdash; constant dim glow at rest</option>
+        <option value="1">Breathe &mdash; slow pulse dim glow</option>
+      </select>
+    </div>
   </div>
 </div>
 
@@ -377,6 +450,37 @@ function updateWifiSections() {
   document.getElementById('sta-sec').className = 'wifi-sec' + (m==='1' ? ' active' : '');
 }
 
+/* ── Lens preset description ───────────────────────────────────────────── */
+var LENS_DESCS = [
+  'All 256 LEDs active — use for custom or universal builds.',
+  '3-section chrome trim layout: outer (cols 0\u20139) \u2022 center (cols 12\u201320) \u2022 inner (cols 23\u201331). Classic 87\u201393 Mustang GT look.',
+  '2-section clean-lens layout: wide outer (cols 0\u201313) and inner (cols 18\u201331) panels. Matches the 87\u201393 Mustang LX / notchback.',
+  'Center 4-row horizontal bar — illuminates rows 2\u20135 only. Great for Cobra or custom builds with a "bar" taillight appearance.'
+];
+function updateLensDesc() {
+  var v = +document.getElementById('lens_preset').value;
+  document.getElementById('lens_desc').textContent = LENS_DESCS[v] || '';
+}
+updateLensDesc();
+document.getElementById('lens_preset').addEventListener('change', updateLensDesc);
+
+/* ── Color presets ─────────────────────────────────────────────────────── */
+var COLOR_PRESETS = {
+  stock:    { brake:[255,0,0],     turn:[255,100,0],  reverse:[255,255,255] },
+  cool:     { brake:[0,80,255],    turn:[0,180,255],  reverse:[200,220,255] },
+  purple:   { brake:[180,0,255],   turn:[130,0,200],  reverse:[200,200,255] },
+  sport:    { brake:[255,30,0],    turn:[255,200,0],  reverse:[255,255,180] },
+  murdered: { brake:[120,0,0],     turn:[140,50,0],   reverse:[70,70,70]   }
+};
+function applyColorPreset(name) {
+  var p = COLOR_PRESETS[name];
+  if (!p) return;
+  setColor('brake_color',   'brake_hex',   p.brake[0],   p.brake[1],   p.brake[2]);
+  setColor('turn_color',    'turn_hex',    p.turn[0],    p.turn[1],    p.turn[2]);
+  setColor('reverse_color', 'reverse_hex', p.reverse[0], p.reverse[1], p.reverse[2]);
+  toast('Preset applied \u2014 tap Save to keep it');
+}
+
 /* ── Helpers ───────────────────────────────────────────────────────────── */
 function rgb2hex(r, g, b) {
   return '#' + [r,g,b].map(function(v){ return ('0'+v.toString(16)).slice(-2); }).join('');
@@ -416,6 +520,14 @@ function loadSettings() {
       setColor('brake_color',   'brake_hex',   s.brake_r,   s.brake_g,   s.brake_b);
       setColor('turn_color',    'turn_hex',    s.turn_r,    s.turn_g,    s.turn_b);
       setColor('reverse_color', 'reverse_hex', s.reverse_r, s.reverse_g, s.reverse_b);
+      if (s.brake_anim   != null) document.getElementById('brake_anim').value   = s.brake_anim;
+      if (s.turn_anim    != null) document.getElementById('turn_anim').value    = s.turn_anim;
+      if (s.reverse_anim != null) document.getElementById('reverse_anim').value = s.reverse_anim;
+      if (s.run_anim     != null) document.getElementById('run_anim').value     = s.run_anim;
+      if (s.lens_preset  != null) {
+        document.getElementById('lens_preset').value = s.lens_preset;
+        updateLensDesc();
+      }
       document.getElementById('wifi_mode').value = s.wifi_mode;
       document.getElementById('ap_ssid').value   = s.ap_ssid  || '';
       document.getElementById('ap_pass').value   = '';
@@ -446,6 +558,11 @@ function collectSettings() {
     brake_r: br.r, brake_g: br.g, brake_b: br.b,
     turn_r:  tu.r, turn_g:  tu.g, turn_b:  tu.b,
     reverse_r: rv.r, reverse_g: rv.g, reverse_b: rv.b,
+    brake_anim:   +document.getElementById('brake_anim').value,
+    turn_anim:    +document.getElementById('turn_anim').value,
+    reverse_anim: +document.getElementById('reverse_anim').value,
+    run_anim:     +document.getElementById('run_anim').value,
+    lens_preset:  +document.getElementById('lens_preset').value,
     wifi_mode: +document.getElementById('wifi_mode').value,
     ap_ssid:  document.getElementById('ap_ssid').value,
     ap_pass:  document.getElementById('ap_pass').value,
@@ -557,6 +674,12 @@ static void handleGetSettings() {
     doc["reverse_g"] = g_settings.reverse_g;
     doc["reverse_b"] = g_settings.reverse_b;
 
+    doc["brake_anim"]   = g_settings.brake_anim;
+    doc["turn_anim"]    = g_settings.turn_anim;
+    doc["reverse_anim"] = g_settings.reverse_anim;
+    doc["run_anim"]     = g_settings.run_anim;
+    doc["lens_preset"]  = g_settings.lens_preset;
+
     doc["wifi_mode"] = g_settings.wifi_mode;
     doc["ap_ssid"]   = g_settings.ap_ssid;
     doc["ap_pass"]   = "";          // never echo passwords
@@ -613,6 +736,17 @@ static void handlePostSettings() {
     if (doc["reverse_r"].is<int>()) g_settings.reverse_r = (uint8_t)constrain(doc["reverse_r"].as<int>(), 0, 255);
     if (doc["reverse_g"].is<int>()) g_settings.reverse_g = (uint8_t)constrain(doc["reverse_g"].as<int>(), 0, 255);
     if (doc["reverse_b"].is<int>()) g_settings.reverse_b = (uint8_t)constrain(doc["reverse_b"].as<int>(), 0, 255);
+
+    if (doc["brake_anim"].is<int>())
+        g_settings.brake_anim   = (uint8_t)constrain(doc["brake_anim"].as<int>(),   0, 3);
+    if (doc["turn_anim"].is<int>())
+        g_settings.turn_anim    = (uint8_t)constrain(doc["turn_anim"].as<int>(),    0, 3);
+    if (doc["reverse_anim"].is<int>())
+        g_settings.reverse_anim = (uint8_t)constrain(doc["reverse_anim"].as<int>(), 0, 1);
+    if (doc["run_anim"].is<int>())
+        g_settings.run_anim     = (uint8_t)constrain(doc["run_anim"].as<int>(),     0, 1);
+    if (doc["lens_preset"].is<int>())
+        g_settings.lens_preset  = (uint8_t)constrain(doc["lens_preset"].as<int>(),  0, 3);
 
     if (doc["wifi_mode"].is<int>())
         g_settings.wifi_mode = (uint8_t)constrain(doc["wifi_mode"].as<int>(), 0, 1);
